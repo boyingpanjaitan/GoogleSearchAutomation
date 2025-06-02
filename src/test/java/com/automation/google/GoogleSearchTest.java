@@ -30,74 +30,78 @@ public class GoogleSearchTest {
         WebDriverWait wait = new WebDriverWait(driver, Duration.ofSeconds(15));
 
         try {
+            // Langkah 1: Buka Google
             driver.get("https://www.google.com");
-            
-           
             wait.until(webDriver -> ((JavascriptExecutor) webDriver)
                 .executeScript("return document.readyState").equals("complete"));
+            takeScreenshot(driver, "1_google_homepage");
 
-            WebElement searchBox = null;
-            By[] possibleLocators = {
-                By.name("q"),
-                By.xpath("//textarea[@name='q']"),
-                By.cssSelector("[name='q']")
-            };
-            
-            for (By locator : possibleLocators) {
-                try {
-                    searchBox = wait.until(ExpectedConditions.visibilityOfElementLocated(locator));
-                    break;
-                } catch (TimeoutException e) {
-                    continue;
-                }
-            }
-            
-            if (searchBox == null) {
-                throw new RuntimeException("Google search box not found");
-            }
-
+           
+            WebElement searchBox = findSearchBox(wait);
             searchBox.clear();
             searchBox.sendKeys("Selenium WebDriver");
             searchBox.sendKeys(Keys.RETURN);
+            takeScreenshot(driver, "2_after_search");
 
-            // Wait for results
+           
             wait.until(ExpectedConditions.presenceOfElementLocated(By.id("search")));
-
-            // Click first result
             WebElement firstResult = wait.until(
                 ExpectedConditions.elementToBeClickable(
                     By.cssSelector("div.g a h3, div.rc a h3")
                 )
             );
             firstResult.click();
+            takeScreenshot(driver, "3_after_click_first_result");
 
-            // Verify
             wait.until(ExpectedConditions.titleContains("Selenium"));
             String title = driver.getTitle();
             System.out.println("Page title: " + title);
             assertTrue(title.toLowerCase().contains("selenium"));
+            takeScreenshot(driver, "4_verification_success");
 
         } catch (Exception e) {
             System.err.println("Error occurred: " + e.getMessage());
             e.printStackTrace();
-
-            try {
-                // Take a screenshot
-                File folder = new File("screenshots");
-                if (!folder.exists()) {
-                    folder.mkdirs();
-
-                    String timestamp = new SimpleDateFormat("yyyyMMdd_HHmmss").format(new Date());
-                    File screenshot = ((TakesScreenshot)driver).getScreenshotAs(OutputType.FILE);
-                    File destination = new File(folder, "screenshot_" + timestamp + ".png");
-                    FileUtils.copyFile(screenshot, destination);
-                    System.out.println("Screenshot disimpan di: " + destination.getAbsolutePath());
-                    }
-            } catch (Exception screenshotException) {
-                System.err.println("Error occurred while taking screenshot: " + screenshotException.getMessage());
-            }
+            takeScreenshot(driver, "error_" + System.currentTimeMillis());
+            throw e; // Re-throw exception agar test gagal
         } finally {
             driver.quit();
+        }
+    }
+
+   
+    private WebElement findSearchBox(WebDriverWait wait) {
+        By[] possibleLocators = {
+            By.name("q"),
+            By.xpath("//textarea[@name='q']"),
+            By.cssSelector("[name='q']")
+        };
+        
+        for (By locator : possibleLocators) {
+            try {
+                return wait.until(ExpectedConditions.visibilityOfElementLocated(locator));
+            } catch (TimeoutException e) {
+                continue;
+            }
+        }
+        throw new RuntimeException("Google search box not found");
+    }
+
+   
+    private void takeScreenshot(WebDriver driver, String screenshotName) {
+        try {
+            File folder = new File("screenshots");
+            if (!folder.exists()) {
+                folder.mkdirs();
+            }
+
+            String timestamp = new SimpleDateFormat("yyyyMMdd_HHmmss").format(new Date());
+            File screenshot = ((TakesScreenshot)driver).getScreenshotAs(OutputType.FILE);
+            File destination = new File(folder, screenshotName + "_" + timestamp + ".png");
+            FileUtils.copyFile(screenshot, destination);
+            System.out.println("Screenshot disimpan di: " + destination.getAbsolutePath());
+        } catch (Exception e) {
+            System.err.println("Gagal mengambil screenshot: " + e.getMessage());
         }
     }
 }
