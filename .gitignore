@@ -1,0 +1,13 @@
+# Maven target folder
+/target/
+
+# IDE specific files
+.idea/
+*.iml
+*.class
+
+# Logs
+*.log
+
+# Screenshots (optional, if not needed in repo)
+screenshots/
