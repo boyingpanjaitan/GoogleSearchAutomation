@@ -20,5 +20,5 @@ This is a simple Selenium WebDriver automation project using Java and JUnit to p
 - JUnit 5
 - Maven
 
-##Author
+## Author
 Boying Panjaitan
